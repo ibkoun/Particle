@@ -11,7 +11,20 @@ class Graphic2D:
 
 
 class Collider2D:
+    # Check if a coordinate is within the boundaries.
+    def contains_point(self, point):
+        pass
+
+    # Check for a collision with a circle.
     def collides_circle(self, circle):
+        pass
+
+    # Check if a circle crosses the boundaries.
+    def detects_circle(self, circle):
+        pass
+
+    # Check if a circle is within the boundaries.
+    def confines_circle(self, circle):
         pass
 
 
@@ -34,11 +47,11 @@ class Shape2D(Graphic2D):
         self._item = item
 
     def squared_distance_from_point(self, point):
-        vector = point.get_center() - self._center
+        vector = point - self._center
         return np.dot(vector, vector)
 
     def distance_from_point(self, point):
-        vector = point.get_center() - self._center
+        vector = point - self._center
         return math.sqrt(np.dot(vector, vector))
 
 
@@ -72,6 +85,12 @@ class Circle(Shape2D, Collider2D):
             canvas.coords(self._item, x1, y1, x2, y2)
             canvas.itemconfig(self._item, fill=fill, outline=outline)
 
+    def contains_point(self, point):
+        vector = self._center - point
+        distance = np.dot(vector, vector)
+        threshold = math.pow(self._radius, 2)
+        return distance < threshold or math.isclose(distance, threshold)
+
     def collides_circle(self, circle):
         vector = self._center - circle.get_center()
         distance = np.dot(vector, vector)
@@ -88,12 +107,6 @@ class Circle(Shape2D, Collider2D):
         vector = circle.get_center() - self._center
         distance = np.dot(vector, vector)
         threshold = math.pow(self._radius - circle.get_radius(), 2)
-        return distance < threshold or math.isclose(distance, threshold)
-
-    def overlaps_circle(self, circle, epsilon):
-        vector = circle.get_center() - self._center
-        distance = np.dot(vector, vector)
-        threshold = math.pow(self._radius + circle.get_radius() - epsilon, 2)
         return distance < threshold or math.isclose(distance, threshold)
 
 

@@ -315,44 +315,24 @@ class Quadtree(Graphic2D):
                     or east_border.intersects_segment(border_12)\
                     or north_border.intersects_segment(border_12)\
                     or south_border.intersects_segment(border_12):
-                # if len(quadrant.leaves()) == 0:
-                    # canvas.create_line(north_west[0], north_west[1], north_east[0], north_east[1], fill="red")
-                    # canvas.create_line(south_west[0], south_west[1], south_east[0], south_east[1], fill="red")
-                    # canvas.create_line(north_west[0], north_west[1], south_west[0], south_west[1], fill="red")
-                    # canvas.create_line(north_east[0], north_east[1], south_east[0], south_east[1], fill="red")
                 quadrants.append(quadrant)
                 queue += quadrant.leaves()
             elif west_border.intersects_segment(border_13)\
                     or east_border.intersects_segment(border_13)\
                     or north_border.intersects_segment(border_13)\
                     or south_border.intersects_segment(border_13):
-                # if len(quadrant.leaves()) == 0:
-                    # canvas.create_line(north_west[0], north_west[1], north_east[0], north_east[1], fill="red")
-                    # canvas.create_line(south_west[0], south_west[1], south_east[0], south_east[1], fill="red")
-                    # canvas.create_line(north_west[0], north_west[1], south_west[0], south_west[1], fill="red")
-                    # canvas.create_line(north_east[0], north_east[1], south_east[0], south_east[1], fill="red")
                 quadrants.append(quadrant)
                 queue += quadrant.leaves()
             elif west_border.intersects_segment(border_24)\
                     or east_border.intersects_segment(border_24)\
                     or north_border.intersects_segment(border_24)\
                     or south_border.intersects_segment(border_24):
-                # if len(quadrant.leaves()) == 0:
-                    # canvas.create_line(north_west[0], north_west[1], north_east[0], north_east[1], fill="red")
-                    # canvas.create_line(south_west[0], south_west[1], south_east[0], south_east[1], fill="red")
-                    # canvas.create_line(north_west[0], north_west[1], south_west[0], south_west[1], fill="red")
-                    # canvas.create_line(north_east[0], north_east[1], south_east[0], south_east[1], fill="red")
                 quadrants.append(quadrant)
                 queue += quadrant.leaves()
             elif west_border.intersects_segment(border_34)\
                     or east_border.intersects_segment(border_34)\
                     or north_border.intersects_segment(border_34)\
                     or south_border.intersects_segment(border_34):
-                # if len(quadrant.leaves()) == 0:
-                    # canvas.create_line(north_west[0], north_west[1], north_east[0], north_east[1], fill="red")
-                    # canvas.create_line(south_west[0], south_west[1], south_east[0], south_east[1], fill="red")
-                    # canvas.create_line(north_west[0], north_west[1], south_west[0], south_west[1], fill="red")
-                    # canvas.create_line(north_east[0], north_east[1], south_east[0], south_east[1], fill="red")
                 quadrants.append(quadrant)
                 queue += quadrant.leaves()
         return quadrants
