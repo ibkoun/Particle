@@ -97,6 +97,12 @@ class Circle(Shape2D, Collider2D):
         threshold = math.pow(self._radius + circle.get_radius(), 2)
         return distance < threshold or math.isclose(distance, threshold)
 
+    def overlaps_circle(self, circle):
+        vector = self._center - circle.get_center()
+        distance = np.dot(vector, vector)
+        threshold = math.pow(self._radius + circle.get_radius(), 2)
+        return distance < threshold and not math.isclose(distance, threshold)
+
     def detects_circle(self, circle):
         vector = self._center - circle.get_center()
         distance = np.dot(vector, vector)
@@ -108,6 +114,11 @@ class Circle(Shape2D, Collider2D):
         distance = np.dot(vector, vector)
         threshold = math.pow(self._radius - circle.get_radius(), 2)
         return distance < threshold or math.isclose(distance, threshold)
+
+    def distance_from_circle(self, circle):
+        vector = circle.get_center() - self._center
+        distance = math.sqrt(np.dot(vector, vector))
+        return distance - self._radius - circle.get_radius()
 
 
 class Rectangle(Shape2D):
@@ -160,10 +171,14 @@ class Rectangle(Shape2D):
         cx = self._center[0]
         cy = self._center[1]
         x, y = circle.get_center()
-        left = x + circle.get_radius() > cx - self._width / 2
-        right = x - circle.get_radius() < cx + self._width / 2
-        top = y + circle.get_radius() > cy - self._height / 2
-        bottom = y - circle.get_radius() < cy + self._height / 2
+        left = x + circle.get_radius() > cx - self._width / 2 or math.isclose(x + circle.get_radius(),
+                                                                                   cx - self._width / 2)
+        right = x - circle.get_radius() < cx + self._width / 2 or math.isclose(x - circle.get_radius(),
+                                                                                    cx + self._width / 2)
+        top = y + circle.get_radius() > cy - self._height / 2 or math.isclose(y + circle.get_radius(),
+                                                                                    cy - self._height / 2)
+        bottom = y - circle.get_radius() < cy + self._height / 2 or math.isclose(y - circle.get_radius(),
+                                                                                    cy + self._height / 2)
         return left and right and top and bottom
 
     def confines_circle(self, circle):

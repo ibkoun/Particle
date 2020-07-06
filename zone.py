@@ -1,18 +1,32 @@
 from graphic import Circle, Rectangle
 from node import Quadrant, Quadtree
+import concurrent.futures
+from threading import Thread
 import math
 import numpy as np
 from random import random
 from random import seed
 import tkinter as tk
 import formula
+import time
 
 
 class CircleZone(Circle):
     def __init__(self, x, y, radius):
         super(CircleZone, self).__init__(x, y, radius)
+        self.root = tk.Tk()
+        self.canvas = tk.Canvas(self.root, width=1000, height=1000)
+        self.canvas.pack()
+        self.animation = None
         self._circles = []
         self._grid = Quadtree(Quadrant(x, y, 2 * radius, 2 * radius))
+        self.count = 0
+        self.draw(self.canvas)
+        self.add_random_circles(100)
+        self._grid.draw(self.canvas)
+        self._grid.quadtree_search_result()
+        self.move_circles_randomly(100)
+        self.root.mainloop()
 
     def grid(self):
         return self._grid
@@ -63,14 +77,15 @@ class CircleZone(Circle):
         super(CircleZone, self).draw(canvas, fill=fill, outline=outline)
         self._grid.draw(canvas, fill=fill, outline=outline)
 
-    def move_circles_randomly(self, magnitude, canvas):
-        for i in range(1):  # n = 1 for testing purpose.
+    def move_circles_randomly(self, magnitude):
+        print("Count: " + str(self.count))
+        for i in range(len(self._circles)):  # n = 1 for testing purpose.
             # Randomize the direction of the movement.
             angle = math.radians(random() * 360)
             x = magnitude * math.cos(angle)
             y = magnitude * math.sin(angle)
-            displacement = np.array([x, y])
-            distance = np.dot(displacement, displacement)
+            max_displacement = np.array([x, y])
+            max_distance = np.dot(max_displacement, max_displacement)
 
             # Get the circle's information.
             target = self._circles[i]
@@ -78,8 +93,7 @@ class CircleZone(Circle):
             current_position = target.get_center()
 
             # Calculate the circle's new position.
-            new_position = current_position + displacement
-            target_quadrants = self._grid.circle_quadrants(target)
+            new_position = current_position + max_displacement
             target.set_center(new_position[0], new_position[1])
 
             # Check if the circle is still inside the zone.
@@ -87,70 +101,83 @@ class CircleZone(Circle):
                 new_position = formula.point_on_circumference(self._radius - target_radius, self._center,
                                                               current_position, new_position)
                 target.set_center(new_position[0], new_position[1])
-                displacement = new_position - current_position
-                distance = np.dot(displacement, displacement)
+                max_displacement = new_position - current_position
+                max_distance = np.dot(max_displacement, max_displacement)
 
             # Check if the circle collides with other circles along its path.
-            if distance > 0:
-                quadrants = self._grid.rectangle_overlap(current_position, new_position, target_radius, canvas)
+            if not math.isclose(max_distance, 0, rel_tol=1e-09):
+                target.set_center(current_position[0], current_position[1])
+                quadrants = self._grid.rectangle_overlap(current_position, new_position, target_radius, self.canvas)
                 trajectory = formula.Segment(current_position, new_position)
-                obstacles = []
+                circles = set()
+                obstacles = set()
                 for quadrant in quadrants:
                     contents = quadrant.contents()
                     for content in contents:
                         if content != target:
+                            circles.add(content)
                             point = content.get_center()
                             vector = point - current_position
-                            distance_from_trajectory = trajectory.squared_distance_from_point(point)
-                            distance_from_obstacle = target.squared_distance_from_point(point)
-                            if distance_from_trajectory < math.pow(target.get_radius() + content.get_radius(), 2):
-                                distance_along_trajectory = distance_from_obstacle - distance_from_trajectory \
-                                    if distance_from_trajectory > 0 else distance_from_obstacle
-                                threshold = math.sqrt(np.dot(displacement, displacement)) + target_radius \
-                                            + content.get_radius()
-                                if distance_along_trajectory < math.pow(threshold, 2):
-                                    theta = formula.angle_between(displacement, vector)
-                                    if abs(theta) < 90:
-                                        obstacles.append(content)
-                    obstacles.sort(key=lambda circle: target.distance_from_point(circle.get_center()))
-                    j = 0
-                    while j < len(obstacles):
-                        point = obstacles[j].get_center()
-                        distance_from_trajectory = trajectory.squared_distance_from_point(point)
-                        if math.isclose(distance_from_trajectory, 0):
-                            displacement = formula.resize_vector(displacement,
-                                                                 target_radius + obstacles[j].get_radius())
-                            new_position = point - displacement
-                        else:
-                            distance_from_obstacle = math.pow(obstacles[j].get_radius() + target_radius, 2)
-                            projection = formula.project_vector(point - current_position, displacement)
-                            distance_from_position = math.sqrt(distance_from_obstacle - distance_from_trajectory)
-                            displacement = formula.resize_vector(displacement, distance_from_position)
-                            position = current_position + projection - displacement
-                            vector = position - current_position
-                            distance = np.dot(vector, vector)
-                            squared_magnitude = math.pow(magnitude, 2)
-                            if distance < squared_magnitude or math.isclose(distance, squared_magnitude):
-                                new_position = position
-                        target.set_center(new_position[0], new_position[1])
-                        j += 1
-                        while j < len(obstacles):
-                            if target.collides_circle(obstacles[j]):
-                                break
-                            j += 1
-                if not self.confines_circle(target):
-                    new_position = formula.point_on_circumference(self._radius - target_radius, self._center,
-                                                                  current_position, new_position)
+                            theta = formula.angle_between(max_displacement, vector)
+                            if abs(theta) < 90 and not math.isclose(abs(theta), 90):
+                                distance_from_trajectory = trajectory.squared_distance_from_point(point)
+                                distance_from_obstacle = target.squared_distance_from_point(point)
+                                width_threshold = target.get_radius() + content.get_radius()
+                                if distance_from_trajectory < math.pow(width_threshold, 2):
+                                    distance_along_trajectory = distance_from_obstacle - distance_from_trajectory \
+                                        if not math.isclose(distance_from_trajectory, 0, rel_tol=1e-09)\
+                                        else distance_from_obstacle
+                                    length_threshold = math.sqrt(np.dot(max_displacement, max_displacement)) + target_radius \
+                                                       + content.get_radius()
+                                    if distance_along_trajectory < math.pow(length_threshold, 2):
+                                        obstacles.add(content)
+                obstacles = list(obstacles)
+                obstacles.sort(key=lambda circle: target.distance_from_circle(circle))
+                non_obstacles = list(circles.difference(obstacles))
+                non_obstacles.sort(key=lambda circle: target.distance_from_circle(circle))
+
+                # Movement stops at nearest obstacle.
+                j = 0
+                while j < len(obstacles):
+                    point = obstacles[j].get_center()
+                    distance_from_trajectory = trajectory.squared_distance_from_point(point)
+                    distance_from_obstacle = math.pow(obstacles[j].get_radius() + target_radius, 2)
+                    projection = formula.project_vector(point - current_position, max_displacement)
+                    distance_from_position = math.sqrt(distance_from_obstacle - distance_from_trajectory)
+                    delta = formula.resize_vector(max_displacement, distance_from_position)
+                    new_position = current_position + projection - delta
                     target.set_center(new_position[0], new_position[1])
-                if not np.all(np.isclose(current_position, new_position)):
-                    for quadrant in target_quadrants:
+                    displacement = new_position - current_position
+                    distance = np.dot(displacement, displacement)
+                    if distance > max_distance and not math.isclose(distance, max_distance):
+                        max_displacement = formula.resize_vector(displacement, math.sqrt(max_distance))
+                        new_position = current_position + max_displacement
+                        target.set_center(new_position[0], new_position[1])
+                        max_distance = np.dot(max_displacement, max_displacement)
+                    j += 1
+                    while j < len(obstacles):
+                        if target.overlaps_circle(obstacles[j]):
+                            break
+                        j += 1
+                for j in range(len(non_obstacles)):
+                    if target.overlaps_circle(non_obstacles[j]):
+                        new_position = current_position
+                        target.set_center(new_position[0], new_position[1])
+                        break
+                max_displacement = new_position - current_position
+                max_distance = np.dot(max_displacement, max_displacement)
+                target.set_center(new_position[0], new_position[1])
+                if not math.isclose(max_distance, 0, rel_tol=1e-09):
+                    for quadrant in quadrants:
                         if target in quadrant.contents():
                             quadrant.contents().remove(target)
-                    target_quadrants = self._grid.circle_quadrants(target, True)
-                    for quadrant in target_quadrants:
+                    quadrants = self._grid.circle_quadrants(target)
+                    for quadrant in quadrants:
                         if target not in quadrant.contents() and len(quadrant.leaves()) == 0:
                             quadrant.contents().append(target)
-                target.redraw(canvas)
+                    target.redraw(self.canvas)
+        self.count += 1
+        self.animation = self.root.after(int(1000/60), self.move_circles_randomly, magnitude)
 
 
 class RectangleZone(Rectangle):
@@ -208,28 +235,4 @@ class RectangleZone(Rectangle):
 
 if __name__ == "__main__":
     seed()
-
-    class App:
-        def __init__(self):
-            self.root = tk.Tk()
-            self.canvas = tk.Canvas(self.root, width=1000, height=1000)
-            self.canvas.pack()
-            self.circle_zone = CircleZone(500, 500, 250)
-            self.m = 0
-            self.n = 100
-            self.circle_zone.add_random_circles(self.n)
-            # self.circleZone.grid().linear_search_result()
-            # print()
-            self.circle_zone.grid().quadtree_search_result()
-            print()
-            self.circle_zone.grid().result(self.n)
-            self.circle_zone.draw(self.canvas)
-            self.animate()
-            self.root.mainloop()
-
-        def animate(self):
-            self.circle_zone.move_circles_randomly(10, self.canvas)
-            # self.circle_zone.grid().redraw(self.canvas)
-            self.root.after(int(1000/60), self.animate)
-
-    app = App()
+    circle_zone = CircleZone(500, 500, 100)

@@ -62,71 +62,9 @@ class Quadrant(Node, Rectangle):
     
     def circle_overlap(self, circle):
         quadrants = []
-        radius = circle.get_radius()
-        x, y = circle.get_center()
-        cx, cy = self._center
-        overlaps_left = x - radius < cx
-        overlaps_right = x + radius > cx
-        overlaps_top = y - radius < cy
-        overlaps_bottom = y + radius > cy
-        if x > cx and y < cy:
-            quadrants.append(self._leaves[0])
-            if overlaps_left:
-                quadrants.append(self._leaves[1])
-            if overlaps_bottom:
-                quadrants.append(self._leaves[3])
-            if overlaps_left and overlaps_bottom:
-                quadrants.append(self._leaves[2])
-        elif x < cx and y < cy:
-            quadrants.append(self._leaves[1])
-            if overlaps_right:
-                quadrants.append(self._leaves[0])
-            if overlaps_bottom:
-                quadrants.append(self._leaves[2])
-            if overlaps_right and overlaps_bottom:
-                quadrants.append(self._leaves[3])
-        elif x < cx and y > cy:
-            quadrants.append(self._leaves[2])
-            if overlaps_right:
-                quadrants.append(self._leaves[3])
-            if overlaps_top:
-                quadrants.append(self._leaves[1])
-            if overlaps_right and overlaps_top:
-                quadrants.append(self._leaves[0])
-        elif x > cx and y > cy:
-            quadrants.append(self._leaves[3])
-            if overlaps_left:
-                quadrants.append(self._leaves[2])
-            if overlaps_top:
-                quadrants.append(self._leaves[0])
-            if overlaps_left and overlaps_top:
-                quadrants.append(self._leaves[1])
-        elif x == cx and y < cy:
-            quadrants.append(self._leaves[0])
-            quadrants.append(self._leaves[1])
-            if overlaps_bottom:
-                quadrants.append(self._leaves[2])
-                quadrants.append(self._leaves[3])
-        elif x == cx and y > cy:
-            quadrants.append(self._leaves[2])
-            quadrants.append(self._leaves[3])
-            if overlaps_top:
-                quadrants.append(self._leaves[0])
-                quadrants.append(self._leaves[1])
-        elif x > cx and y == cy:
-            quadrants.append(self._leaves[0])
-            quadrants.append(self._leaves[3])
-            if overlaps_left:
-                quadrants.append(self._leaves[1])
-                quadrants.append(self._leaves[2])
-        elif x < cx and y == cy:
-            quadrants.append(self._leaves[1])
-            quadrants.append(self._leaves[2])
-            if overlaps_right:
-                quadrants.append(self._leaves[0])
-                quadrants.append(self._leaves[3])
-        elif x == cx and y == cy:
-            quadrants += self._leaves
+        for quadrant in self._leaves:
+            if quadrant.detects_circle(circle):
+                quadrants.append(quadrant)
         return quadrants
 
 
@@ -191,13 +129,15 @@ class Quadtree(Graphic2D):
         quadrants = []
         while len(queue) > 0:
             quadrant = queue.pop(0)
-            if not leaves_only:
-                if quadrant.contains_point(circle.get_center()):
-                    quadrants.append(quadrant)
             if len(quadrant.leaves()) > 0:
-                candidates = quadrant.circle_overlap(circle)
-                quadrants += candidates
+                if not leaves_only:
+                    if quadrant.detects_circle(circle):
+                        quadrants.append(quadrant)
+                candidates = quadrant.leaves()
                 queue += candidates
+            else:
+                if quadrant.detects_circle(circle):
+                    quadrants.append(quadrant)
         return quadrants
 
     def quadtree_search(self, circle, overlap=False):
@@ -216,15 +156,15 @@ class Quadtree(Graphic2D):
                     circles = quadrant.contents()
                     for i in range(len(circles)):
                         self.quadtree_comparisons += 1
-                        if circle.collides_circle(circles[i]):
+                        if circle.overlaps_circle(circles[i]):
                             quadrants.clear()
                             return quadrants
                     if len(quadrant.leaves()) == 0:
                         width = quadrant.get_width() / 2
                         height = quadrant.get_height() / 2
                         radius = 2 * circle.get_radius()
-                        if width >= radius or math.isclose(width, radius)\
-                                and height >= radius or math.isclose(height, radius):
+                        if (width > radius or math.isclose(width, radius))\
+                                and (height > radius or math.isclose(height, radius)):
                             quadrant.partition()
                         if len(quadrant.leaves()) == 0:
                             quadrants.append(quadrant)
@@ -234,6 +174,12 @@ class Quadtree(Graphic2D):
                         queue += quadrant.circle_overlap(circle)
             return quadrants
         return [self._root]
+
+    def draw_rectangle(self, canvas, p1, p2, p3, p4):
+        canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill="blue", width=2)
+        canvas.create_line(p3[0], p3[1], p4[0], p4[1], fill="blue", width=2)
+        canvas.create_line(p1[0], p1[1], p3[0], p3[1], fill="blue", width=2)
+        canvas.create_line(p2[0], p2[1], p4[0], p4[1], fill="blue", width=2)
 
     def rectangle_overlap(self, start, end, margin, canvas):
         queue = [self._root]
