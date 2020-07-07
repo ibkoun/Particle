@@ -7,6 +7,6 @@ This is a program that simulates the random movement of particles. The latters a
 # Demo
 Circle zone with radius equal to 250 pixels and small circles with radius equal to 10 pixels.
 <div>
-  <img src="Demo/particle_demo1.png" align="center">
+  <img src="Demo/particle_demo1.png" align="center" width=468>
 </div>
 
