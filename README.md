@@ -15,7 +15,6 @@ This is a program that simulates the random movement of particles. The latters a
 ## Moving particles
 <div>
   <img src="Demo/particle_demo2.gif" align="center">
-  
   <figcaption><b>Figure 2. Circle zone with radius equal to 250 pixels containing 50 small circles with radius equal to 10 pixels.</b> The positions of the circles are configured to be updated at the rate of 60 frames per second (this might not be accurate because the "after" function of tkinter is used to animate the movement).
   </figcaption>
 </div>
