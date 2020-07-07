@@ -8,7 +8,7 @@ This is a program that simulates the random movement of particles. The latters a
 ## Trajectory of a particle
 <div>
   <img src="Demo/particle_demo1.png" align="center">
-  <figcaption><b>Figure 1. Circle zone with radius equal to 250 pixels containing 200 small circles with radius equal to 10 pixels.</b> The circle with the green outline is the starting position and the green circle is the final position. The blue rectangle represents the the hitbox of the movement of the green circle and the red circles are the obstacles. The squares are the partitions of a quadtree.
+  <figcaption><b>Figure 1. Circle zone with radius equal to 250 pixels containing 200 small circles with radius equal to 10 pixels.</b> The circle with the green outline is the starting position and the green circle is the final position. The blue rectangle represents the hitbox of the movement of the green circle and the red circles are the obstacles. The squares are the partitions of a quadtree.
   </figcaption>
 </div>
 
