@@ -11,6 +11,7 @@ This is a program that simulates the random movement of particles. The latters a
   <figcaption>Figure 1. Circle zone with radius equal to 250 pixels containing 200 small circles with radius equal to 10 pixels. The circle with the green outline is the starting position and the green circle is the final position. The blue rectangle represents the the hitbox of the movement of the green circle and the red circles are the obstacles
   </figcaption>
 </div>
+
 ## Moving particles
 <div>
   <img src="Demo/particle_demo2.gif" align="center">
