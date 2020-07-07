@@ -175,12 +175,6 @@ class Quadtree(Graphic2D):
             return quadrants
         return [self._root]
 
-    def draw_rectangle(self, canvas, p1, p2, p3, p4):
-        canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill="blue", width=2)
-        canvas.create_line(p3[0], p3[1], p4[0], p4[1], fill="blue", width=2)
-        canvas.create_line(p1[0], p1[1], p3[0], p3[1], fill="blue", width=2)
-        canvas.create_line(p2[0], p2[1], p4[0], p4[1], fill="blue", width=2)
-
     def rectangle_overlap(self, start, end, margin, canvas):
         queue = [self._root]
         quadrants = []

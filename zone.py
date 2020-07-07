@@ -1,14 +1,11 @@
 from graphic import Circle, Rectangle
 from node import Quadrant, Quadtree
-import concurrent.futures
-from threading import Thread
 import math
 import numpy as np
 from random import random
 from random import seed
 import tkinter as tk
 import formula
-import time
 
 
 class CircleZone(Circle):
@@ -78,7 +75,6 @@ class CircleZone(Circle):
         self._grid.draw(canvas, fill=fill, outline=outline)
 
     def move_circles_randomly(self, magnitude):
-        print("Count: " + str(self.count))
         for i in range(len(self._circles)):  # n = 1 for testing purpose.
             # Randomize the direction of the movement.
             angle = math.radians(random() * 360)
@@ -136,7 +132,7 @@ class CircleZone(Circle):
                 non_obstacles = list(circles.difference(obstacles))
                 non_obstacles.sort(key=lambda circle: target.distance_from_circle(circle))
 
-                # Movement stops at nearest obstacle.
+                # Movement stops at the nearest obstacle.
                 j = 0
                 while j < len(obstacles):
                     point = obstacles[j].get_center()
@@ -159,14 +155,20 @@ class CircleZone(Circle):
                         if target.overlaps_circle(obstacles[j]):
                             break
                         j += 1
+
+                # Check if the circle overlaps other circles that were outside the path.
                 for j in range(len(non_obstacles)):
                     if target.overlaps_circle(non_obstacles[j]):
                         new_position = current_position
                         target.set_center(new_position[0], new_position[1])
                         break
+
+                # Update the circle's coordinate.
                 max_displacement = new_position - current_position
                 max_distance = np.dot(max_displacement, max_displacement)
                 target.set_center(new_position[0], new_position[1])
+
+                # Update the quadtree.
                 if not math.isclose(max_distance, 0, rel_tol=1e-09):
                     for quadrant in quadrants:
                         if target in quadrant.contents():
@@ -176,10 +178,10 @@ class CircleZone(Circle):
                         if target not in quadrant.contents() and len(quadrant.leaves()) == 0:
                             quadrant.contents().append(target)
                     target.redraw(self.canvas)
-        self.count += 1
         self.animation = self.root.after(int(1000/60), self.move_circles_randomly, magnitude)
 
 
+# TODO: Complete the code for RectangleZone.
 class RectangleZone(Rectangle):
     def __init__(self, x, y, width, height):
         super(RectangleZone, self).__init__(x, y, width, height)
