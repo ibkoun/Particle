@@ -209,6 +209,8 @@ class Quadtree(Graphic2D):
             center = quadrant.get_center()
             width = quadrant.get_width()
             height = quadrant.get_height()
+            centerline = formula.Segment(start, end)
+            distance_from_centerline = centerline.distance_from_point(center)
 
             # The boundary of the current quadrant.
             x1 = center[0] - width / 2
@@ -228,8 +230,13 @@ class Quadtree(Graphic2D):
             west_border = formula.Segment(north_west, south_west)
             east_border = formula.Segment(north_east, south_east)
 
+            # Check if the quadrant is inside the rectangle.
+            if distance_from_centerline < margin or math.isclose(distance_from_centerline, margin):
+                quadrants.append(quadrant)
+                queue += quadrant.leaves()
+
             # Check if one of the borders of the rectangle goes through the center of the current quadrant.
-            if border_12.intersects_point(center)\
+            elif border_12.intersects_point(center)\
                     or border_13.intersects_point(center)\
                     or border_24.intersects_point(center)\
                     or border_34.intersects_point(center):
