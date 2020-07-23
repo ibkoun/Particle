@@ -24,13 +24,13 @@ class Quadrant(Node, Rectangle):
 
     def draw(self, canvas, fill="", outline="black"):
         super(Quadrant, self).draw(canvas, fill=fill, outline=outline)
-        for i in range(len(self._contents)):
-            self._contents[i].draw(canvas, fill=fill, outline=outline)
+        # for i in range(len(self._contents)):
+            # self._contents[i].draw(canvas, fill=fill, outline=outline)
 
     def redraw(self, canvas, fill="", outline="black"):
         super(Quadrant, self).redraw(canvas, fill=fill, outline=outline)
-        for i in range(len(self._contents)):
-            self._contents[i].redraw(canvas, fill=fill, outline=outline)
+        # for i in range(len(self._contents)):
+            # self._contents[i].redraw(canvas, fill=fill, outline=outline)
         
     def partition(self):
         if len(self._leaves) == 0:
@@ -63,7 +63,7 @@ class Quadrant(Node, Rectangle):
     def circle_overlap(self, circle):
         quadrants = []
         for quadrant in self._leaves:
-            if quadrant.detects_circle(circle):
+            if quadrant.collides_circle(circle):
                 quadrants.append(quadrant)
         return quadrants
 
@@ -124,19 +124,19 @@ class Quadtree(Graphic2D):
         print("LINEAR SEARCH")
         print("Comparisons: {}".format(self.linear_comparisons))
 
-    def circle_quadrants(self, circle, leaves_only=False):
+    def overlapped_by_circle(self, circle, leaves_only=False):
         queue = [self._root]
         quadrants = []
         while len(queue) > 0:
             quadrant = queue.pop(0)
             if len(quadrant.leaves()) > 0:
                 if not leaves_only:
-                    if quadrant.detects_circle(circle):
+                    if quadrant.collides_circle(circle):
                         quadrants.append(quadrant)
                 candidates = quadrant.leaves()
                 queue += candidates
             else:
-                if quadrant.detects_circle(circle):
+                if quadrant.collides_circle(circle):
                     quadrants.append(quadrant)
         return quadrants
 
@@ -289,3 +289,13 @@ class Quadtree(Graphic2D):
         print("Lookups: {}".format(self.quadtree_lookups))
         print("Comparisons: {}".format(self.quadtree_comparisons))
         print("Total: {}".format(self.quadtree_lookups + self.quadtree_comparisons))
+
+    def quadrants_count(self):
+        count = 0
+        queue = [self._root]
+        while len(queue) > 0:
+            quadrant = queue.pop(0)
+            count += 1
+            if len(quadrant.leaves()) > 0:
+                queue += quadrant.leaves()
+        return count

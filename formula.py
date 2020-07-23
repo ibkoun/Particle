@@ -82,6 +82,11 @@ class Segment:
         y = (self.A * segment.C - segment.A * self.C) / (self.A * segment.B - segment.A * self.B)
         return self.intersects_point([x, y]) and segment.intersects_point([x, y])
 
+    def intersection_point(self, segment):
+        x = (self.B * segment.C - segment.B * self.C) / (self.B * segment.A - segment.B * self.A)
+        y = (self.A * segment.C - segment.A * self.C) / (self.A * segment.B - segment.A * self.B)
+        return np.array([x, y])
+
 
 def resize_vector(vector, magnitude):
     return (magnitude / math.sqrt(np.dot(vector, vector))) * vector
@@ -99,9 +104,15 @@ def project_vector(u, v):
 
 
 # Calculate the angle between vector u and vector v.
-def angle_between(u, v):
+def angle_between(u, v, signed=False):
     mu = math.sqrt(np.dot(u, u))
     mv = math.sqrt(np.dot(v, v))
+
+    # Calculate the signed angle necessary to rotate u to v.
+    if signed:
+        ua = math.degrees(math.acos(u[0] / mu))
+        va = math.degrees(math.acos(v[0] / mv))
+        return va - ua
     return math.degrees(math.acos(round(np.dot(u, v) / (mu * mv), 2)))
 
 
